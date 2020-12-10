@@ -60,8 +60,9 @@ public class UPushApplication extends Application {
 
     private String VIVO_KEY;
     private String VIVO_APPID;
-    long delayMillis=4000;
-    public  static UPushApplication mUPushApplication;
+
+    public static UPushApplication mUPushApplication;
+
     @Override
     @CallSuper
     public void onCreate() {
@@ -71,29 +72,10 @@ public class UPushApplication extends Application {
 
         //初始化友盟
         initUpush();
-        mUPushApplication=this;
-    }
-
-    /**
-     * 设置延迟
-     * @param delayMillis
-     */
-    public void setDelayMillis(long delayMillis) {
-        this.delayMillis = delayMillis;
-    }
-
-    private Activity mCurrentActivity = null;
-
-    public Activity getCurrentActivity() {
-        return mCurrentActivity;
-    }
-
-    public void setCurrentActivity(Activity mCurrentActivity) {
-        this.mCurrentActivity = mCurrentActivity;
+        mUPushApplication = this;
     }
 
     private void initUpush() {
-
 
         //todo 获取mannifest.xml配置
         try {
@@ -104,39 +86,36 @@ public class UPushApplication extends Application {
             String UMENG_CHANNEL = appInfo.metaData.getString("UMENG_CHANNEL").replace(suffix, "");
             Log.d(TAG, "****************umeng通道****************UMENG_APPKEY:" + UMENG_APPKEY + " UMENG_MESSAGE_SECRET:" + UMENG_MESSAGE_SECRET);
 
-            if(appInfo.metaData.containsKey("XIAOMI_APPID")){
+            if (appInfo.metaData.containsKey("XIAOMI_APPID")) {
                 XIAOMI_ID = appInfo.metaData.getString("XIAOMI_APPID").replace(suffix, "");
                 XIAOMI_KEY = appInfo.metaData.getString("XIAOMI_APPKEY").replace(suffix, "");
 
             }
 
 
-
-
-            if(appInfo.metaData.containsKey("com.huawei.hms.client.appid")){
+            if (appInfo.metaData.containsKey("com.huawei.hms.client.appid")) {
                 HUAWEI_APPID = appInfo.metaData.getString("com.huawei.hms.client.appid").replace(suffix, "");
 
             }
 
 
-            if(appInfo.metaData.containsKey("MEIZU_APPID")&&appInfo.metaData.containsKey("MEIZU_APPKEY")){
+            if (appInfo.metaData.containsKey("MEIZU_APPID") && appInfo.metaData.containsKey("MEIZU_APPKEY")) {
                 MEIZU_APPID = appInfo.metaData.getString("MEIZU_APPID").replace(suffix, "");
                 MEIZU_APPKEY = appInfo.metaData.getString("MEIZU_APPKEY").replace(suffix, "");
-                Log.d(TAG, "****************meizu通道****************MEIZU_APPID:" + MEIZU_APPID +" MEIZU_APPKEY："+MEIZU_APPKEY );
+                Log.d(TAG, "****************meizu通道****************MEIZU_APPID:" + MEIZU_APPID + " MEIZU_APPKEY：" + MEIZU_APPKEY);
             }
 
-            if(appInfo.metaData.containsKey("OPPO_APPKEY")&&appInfo.metaData.containsKey("OPPO_APPSECRET")){
+            if (appInfo.metaData.containsKey("OPPO_APPKEY") && appInfo.metaData.containsKey("OPPO_APPSECRET")) {
                 OPPO_KEY = appInfo.metaData.getString("OPPO_APPKEY").replace(suffix, "");
                 OPPO_SECRET = appInfo.metaData.getString("OPPO_APPSECRET").replace(suffix, "");
-                Log.d(TAG, "****************oppo通道****************MEIZU_APPID:" + MEIZU_APPID +" MEIZU_APPKEY："+MEIZU_APPKEY );
+                Log.d(TAG, "****************oppo通道****************MEIZU_APPID:" + MEIZU_APPID + " MEIZU_APPKEY：" + MEIZU_APPKEY);
             }
 
-            if(appInfo.metaData.containsKey("com.vivo.push.api_key")&&appInfo.metaData.containsKey("com.vivo.push.app_id")){
+            if (appInfo.metaData.containsKey("com.vivo.push.api_key") && appInfo.metaData.containsKey("com.vivo.push.app_id")) {
                 VIVO_KEY = appInfo.metaData.getString("com.vivo.push.api_key").replace(suffix, "");
                 VIVO_APPID = appInfo.metaData.getString("com.vivo.push.app_id").replace(suffix, "");
-                Log.d(TAG, "****************oppo通道****************MEIZU_APPID:" + MEIZU_APPID +" MEIZU_APPKEY："+MEIZU_APPKEY );
+                Log.d(TAG, "****************oppo通道****************MEIZU_APPID:" + MEIZU_APPID + " MEIZU_APPKEY：" + MEIZU_APPKEY);
             }
-
 
 
             UMConfigure.init(this, UMENG_APPKEY, UMENG_CHANNEL, UMConfigure.DEVICE_TYPE_PHONE,
@@ -148,11 +127,14 @@ public class UPushApplication extends Application {
 
         UMConfigure.setLogEnabled(BuildConfig.DEBUG);
         mPushAgent = PushAgent.getInstance(this);
-        mPushAgent.setResourcePackageName("com.wsl.flutterupushplugin");
+        //同AndroidManifest.xml下的package
+        mPushAgent.setResourcePackageName("com.wsl.upush");
         handler = new Handler(getMainLooper());
+        handler.postDelayed(this::getDelay, 4000);
         //sdk开启通知声音
         mPushAgent.setNotificationPlaySound(MsgConstant.NOTIFICATION_PLAY_SDK_ENABLE);
         mPushAgent.setDisplayNotificationNumber(10);
+        mPushAgent.setNotificaitonOnForeground(true);
 
         UmengMessageHandler messageHandler = new UmengMessageHandler() {
 
@@ -165,23 +147,18 @@ public class UPushApplication extends Application {
                 super.dealWithNotificationMessage(context, msg);
 
                 if (UpushPlugin.instance != null) {
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            Map<String, Object> notification = new HashMap<>();
-                            notification.put("title", msg.title);
-                            notification.put("alias", msg.alias);
-                            notification.put("extras", msg.extra);
-                            notification.put("text", msg.text);
-                            notification.put("url", msg.url);
-                            Log.i(TAG, "**************通知的回调方法: " + notification);
-                            final MethodChannel channel = UpushPlugin.instance.channel;
-                            channel.invokeMethod("onReceiveNotification", notification);
-                        }
+                    handler.post(() -> {
+                        Map<String, Object> notification = new HashMap<>();
+                        notification.put("title", msg.title);
+                        notification.put("alias", msg.alias);
+                        notification.put("extras", msg.extra);
+                        notification.put("text", msg.text);
+                        notification.put("url", msg.url);
+                        Log.i(TAG, "**************通知的回调方法: " + notification);
+                        final MethodChannel channel = UpushPlugin.instance.channel;
+                        channel.invokeMethod("onReceiveNotification", notification);
                     });
                 }
-
-
             }
 
             /**
@@ -190,40 +167,33 @@ public class UPushApplication extends Application {
             @Override
             public void dealWithCustomMessage(final Context context, final UMessage msg) {
 
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
+                handler.post(() -> {
 
-                        if (UpushPlugin.instance != null) {
-                            Map<String, Object> notification = new HashMap<>();
-                            notification.put("custom", msg.custom);
-                            notification.put("extras", msg.extra);
-                            Log.i(TAG, "**************自定义消息的回调方法: " + notification);
-                            final MethodChannel channel = UpushPlugin.instance.channel;
-                            Log.i(TAG, "**************自定义消息的回调方法  channel==null: " + (channel == null));
-                            channel.invokeMethod("onReceiveCustomMessage", notification, new MethodChannel.Result() {
-                                @Override
-                                public void success(Object result) {
-                                    Log.i(TAG, "*************自定义消息的回调方法 *success: ");
-                                }
+                    if (UpushPlugin.instance != null) {
+                        Map<String, Object> notification = new HashMap<>();
+                        notification.put("custom", msg.custom);
+                        notification.put("extras", msg.extra);
+                        Log.i(TAG, "**************自定义消息的回调方法: " + notification);
+                        final MethodChannel channel = UpushPlugin.instance.channel;
+                        Log.i(TAG, "**************自定义消息的回调方法  channel==null: " + (channel == null));
+                        channel.invokeMethod("onReceiveCustomMessage", notification, new MethodChannel.Result() {
+                            @Override
+                            public void success(Object result) {
+                                Log.i(TAG, "*************自定义消息的回调方法 *success: ");
+                            }
 
-                                @Override
-                                public void error(String errorCode, String errorMessage, Object errorDetails) {
-                                    Log.i(TAG, "**************自定义消息的回调方法: " + errorCode + " " + errorMessage + "  " + errorDetails);
-                                }
+                            @Override
+                            public void error(String errorCode, String errorMessage, Object errorDetails) {
+                                Log.i(TAG, "**************自定义消息的回调方法: " + errorCode + " " + errorMessage + "  " + errorDetails);
+                            }
 
-                                @Override
-                                public void notImplemented() {
+                            @Override
+                            public void notImplemented() {
 
-                                }
-                            });
-                        }
-
-
+                            }
+                        });
                     }
                 });
-
-
             }
 
             /**
@@ -233,28 +203,23 @@ public class UPushApplication extends Application {
             public Notification getNotification(Context context, UMessage msg) {
                 Log.i(TAG, "**************getNotification: " + msg.title);
 
-
-                switch (msg.builder_id) {
-                    case 1:
-                        Notification.Builder builder = new Notification.Builder(context);
-                        RemoteViews myNotificationView = new RemoteViews(context.getPackageName(),
-                                R.layout.notification_view);
-                        myNotificationView.setTextViewText(R.id.notification_title, msg.title);
-                        myNotificationView.setTextViewText(R.id.notification_text, msg.text);
-                        myNotificationView.setImageViewBitmap(R.id.notification_large_icon,
-                                getLargeIcon(context, msg));
-                        myNotificationView.setImageViewResource(R.id.notification_small_icon,
-                                getSmallIconId(context, msg));
-                        builder.setContent(myNotificationView)
-                                .setSmallIcon(getSmallIconId(context, msg))
-                                .setTicker(msg.ticker)
-                                .setAutoCancel(true);
-                        return builder.getNotification();
-
-                    default:
-                        //默认为0，若填写的builder_id并不存在，也使用默认。
-                        return super.getNotification(context, msg);
-                }
+                if (msg.builder_id == 1) {
+                    Notification.Builder builder = new Notification.Builder(context);
+                    RemoteViews myNotificationView = new RemoteViews(context.getPackageName(),
+                            R.layout.notification_view);
+                    myNotificationView.setTextViewText(R.id.notification_title, msg.title);
+                    myNotificationView.setTextViewText(R.id.notification_text, msg.text);
+                    myNotificationView.setImageViewBitmap(R.id.notification_large_icon,
+                            getLargeIcon(context, msg));
+                    myNotificationView.setImageViewResource(R.id.notification_small_icon,
+                            getSmallIconId(context, msg));
+                    builder.setContent(myNotificationView)
+                            .setSmallIcon(getSmallIconId(context, msg))
+                            .setTicker(msg.ticker)
+                            .setAutoCancel(true);
+                    return builder.getNotification();
+                }//默认为0，若填写的builder_id并不存在，也使用默认。
+                return super.getNotification(context, msg);
             }
         };
         mPushAgent.setMessageHandler(messageHandler);
@@ -274,27 +239,21 @@ public class UPushApplication extends Application {
                 if (UpushPlugin.instance != null) {
                     onClickHandler(msg, "launchApp");
                 }
-
             }
 
             @Override
             public void openUrl(Context context, UMessage msg) {
-
                 Log.i(TAG, "**************openUrl: " + msg.title);
                 if (UpushPlugin.instance != null) {
                     onClickHandler(msg, "openUrl");
                 } else {
                     super.openUrl(context, msg);
                 }
-
-
             }
 
             @Override
             public void openActivity(Context context, UMessage msg) {
                 Log.i(TAG, "**************openActivity: " + msg);
-
-
                 if (UpushPlugin.instance != null) {
                     onClickHandler(msg, "openActivity");
                 } else {
@@ -304,7 +263,6 @@ public class UPushApplication extends Application {
 
             @Override
             public void dealWithCustomAction(Context context, UMessage msg) {
-//                Toast.makeText(context, msg.custom, Toast.LENGTH_LONG).show();
                 onClickHandler(msg, "dealWithCustomAction");
             }
         };
@@ -313,131 +271,92 @@ public class UPushApplication extends Application {
 
         //注册推送服务，每次调用register方法都会回调该接口
         mPushAgent.register(new IUmengRegisterCallback() {
-
             @Override
             public void onSuccess(final String deviceToken) {
                 //注册成功会返回deviceToken deviceToken是推送消息的唯一标志
                 Log.i(TAG, "≈：**************deviceToken：-------->  " + deviceToken);
-//                handler.post(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        final MethodChannel channel = FlutterupushpluginPlugin.instance.channel;
-//                        if(channel!=null){
-//                            Map map=new HashMap();
-//                            map.put("deviceToken",deviceToken);
-//                            map.put("msg","注册成功");
-//                            channel.invokeMethod("onRegisterCallback",map);
-//                        }
-//                    }
-//                });
-
             }
 
             @UiThread
             @Override
             public void onFailure(final String s, final String s1) {
                 Log.e(TAG, "******************注册失败：-------->  " + "s:" + s + ",s1:" + s1);
-//                handler.post(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        final MethodChannel channel = FlutterupushpluginPlugin.instance.channel;
-//                        if(channel!=null){
-//                            Map map=new HashMap();
-//                            map.put("error",s +" "+s1);
-//                            map.put("msg","注册失败");
-//                            channel.invokeMethod("RegisterCallback",map);
-//                        }
-//                    }
-//                });
-
             }
         });
 
-
-        //使用完全自定义处理
-//    mPushAgent.setPushIntentServiceClass(UmengNotificationService.class);
 
         if (XIAOMI_ID != null && !XIAOMI_ID.equals("") && XIAOMI_KEY != null && !XIAOMI_KEY.equals("")) {
 //            //小米通道
             Log.d(TAG, "");
             MiPushRegistar.register(this, XIAOMI_ID, XIAOMI_KEY);
             Log.d(TAG, "****************小米通道****************XIAOMI_ID:" + XIAOMI_ID + " XIAOMI_KEY:" + XIAOMI_KEY);
-
         }
 
         //华为通道
-        if(HUAWEI_APPID!=null&&!HUAWEI_APPID.equals("")){
+        if (HUAWEI_APPID != null && !HUAWEI_APPID.equals("")) {
             HuaWeiRegister.register(this);
-            Log.d(TAG, "****************华为通道****************HUAWEI_APPID:" + HUAWEI_APPID );
+            Log.d(TAG, "****************华为通道****************HUAWEI_APPID:" + HUAWEI_APPID);
         }
-
 
         //魅族通道
         if (MEIZU_APPID != null && !MEIZU_APPID.equals("") && MEIZU_APPKEY != null && !MEIZU_APPKEY.equals("")) {
             MeizuRegister.register(this, MEIZU_APPID, MEIZU_APPKEY);
-
-
         }
 
         //opop
-       //OPPO通道，参数1为app key，参数2为app secret
-
+        //OPPO通道，参数1为app key，参数2为app secret
         if (OPPO_KEY != null && !OPPO_KEY.equals("") && OPPO_SECRET != null && !OPPO_SECRET.equals("")) {
-
             OppoRegister.register(this, OPPO_KEY, OPPO_SECRET);
-
         }
 
         //vivo
         if (VIVO_APPID != null && !VIVO_APPID.equals("") && VIVO_KEY != null && !VIVO_KEY.equals("")) {
             VivoRegister.register(this);
         }
-
-
-
-
-
     }
 
 
     private void onClickHandler(final UMessage msg, final String type) {
-
-         handler.postDelayed(new Runnable() {
-             @Override
-             public void run() {
-                 if (UpushPlugin.instance == null) {
-                     return;
-                 }
-                 final MethodChannel channel = UpushPlugin.instance.channel;
-                 if (channel != null) {
-                     Map<String, Object> map = new HashMap<>();
-                     map.put("title", msg.title);
-                     map.put("alias", msg.alias);
-                     map.put("extras", msg.extra);
-                     map.put("text", msg.text);
-                     map.put("url", msg.url);
-                     map.put("activity", msg.activity);
-                     map.put("custom", msg.custom);
-                     map.put("task_id", msg.task_id);
-                     map.put("methodType", type);
-                     channel.invokeMethod("onNotificatiClickHandler", map);
-                 }
-             }
-         },delayMillis);
-
-    }
-
-
-
-    public void onOffLineMsgClickHandler(final String pushJson){
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (pushJson!=null){
-                    UpushPlugin.instance.onOffLineMsgClickHandler(pushJson);
-                }
+        handler.postDelayed(() -> {
+            if (UpushPlugin.instance == null) {
+                return;
             }
-        },delayMillis);
+            final MethodChannel channel = UpushPlugin.instance.channel;
+            if (channel != null) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("title", msg.title);
+                map.put("alias", msg.alias);
+                map.put("extras", msg.extra);
+                map.put("text", msg.text);
+                map.put("url", msg.url);
+                map.put("activity", msg.activity);
+                map.put("custom", msg.custom);
+                map.put("task_id", msg.task_id);
+                map.put("methodType", type);
+                channel.invokeMethod("onNotificatiClickHandler", map);
+            }
+        }, getDelay());
     }
 
+
+    public void onOffLineMsgClickHandler(final String pushJson) {
+        if (pushJson == null) {
+            return;
+        }
+        handler.postDelayed(() -> UpushPlugin.instance.onOffLineMsgClickHandler(pushJson), getDelay());
+    }
+
+    boolean hasStart = false;
+
+    /**
+     * 第一次点击离线消息需要延迟，但是后续点击不延迟
+     */
+    private long getDelay() {
+        if (hasStart) {
+            return 300;
+        } else {
+            hasStart = true;
+            return 4000;
+        }
+    }
 }

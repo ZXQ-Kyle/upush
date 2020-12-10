@@ -1,5 +1,10 @@
 # UmengPush Flutter Plugin
 
+## copy项目，修复bug及添加个人自定义
+安卓注意事项：
+
+1. 应用的MainActivity，需补充设置，android:launchMode="singleTask"，否则多个离线信息会重复唤醒app
+
 
 ## Android:
 ### 第一步：
