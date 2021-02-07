@@ -95,7 +95,9 @@ public class UpushPlugin implements FlutterPlugin, MethodCallHandler {
 
     @Override
     public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
-        channel.setMethodCallHandler(null);
+        if (channel != null) {
+            channel.setMethodCallHandler(null);
+        }
     }
 
     /**
@@ -172,7 +174,7 @@ public class UpushPlugin implements FlutterPlugin, MethodCallHandler {
      * 别名增加，将某一类型的别名ID绑定至某设备，老的绑定设备信息还在，别名ID和device_token是一对多的映射关系
      */
     private void addAlias(MethodCall call, final Result result) {
-        Map<String,Object> map = call.arguments();
+        Map<String, Object> map = call.arguments();
         String aliasId = String.valueOf(map.get("aliasId"));
         String aliasType = String.valueOf(map.get("aliasType"));
         mPushAgent.addAlias(aliasId, aliasType, new UTrack.ICallBack() {
@@ -193,7 +195,7 @@ public class UpushPlugin implements FlutterPlugin, MethodCallHandler {
      * //移除别名ID
      */
     private void deleteAlias(MethodCall call, final Result result) {
-        Map<String,Object> map = call.arguments();
+        Map<String, Object> map = call.arguments();
         String aliasId = String.valueOf(map.get("aliasId"));
         String aliasType = String.valueOf(map.get("aliasType"));
         mPushAgent.deleteAlias(aliasId, aliasType, new UTrack.ICallBack() {
@@ -202,7 +204,7 @@ public class UpushPlugin implements FlutterPlugin, MethodCallHandler {
             public void onMessage(final boolean isSuccess, final String message) {
                 handler.post(() -> {
                     Log.d(TAG, " isSuccess :" + isSuccess + " message:" + message);
-                    Map<String,Object> resultMap = new HashMap<>();
+                    Map<String, Object> resultMap = new HashMap<>();
                     resultMap.put("isSuccess", isSuccess);
                     resultMap.put("message", message);
                     result.success(resultMap);
@@ -215,7 +217,7 @@ public class UpushPlugin implements FlutterPlugin, MethodCallHandler {
      * //别名绑定，将某一类型的别名ID绑定至某设备，老的绑定设备信息被覆盖，别名ID和deviceToken是一对一的映射关系
      */
     private void setAlias(MethodCall call, final Result result) {
-        Map<String,Object> map = call.arguments();
+        Map<String, Object> map = call.arguments();
         String aliasId = String.valueOf(map.get("aliasId"));
         String aliasType = String.valueOf(map.get("aliasType"));
         mPushAgent.setAlias(aliasId, aliasType, new UTrack.ICallBack() {
@@ -224,7 +226,7 @@ public class UpushPlugin implements FlutterPlugin, MethodCallHandler {
             public void onMessage(final boolean isSuccess, final String message) {
                 handler.post(() -> {
                     Log.d(TAG, " isSuccess :" + isSuccess + " message:" + message);
-                    Map<String,Object> resultMap = new HashMap<>();
+                    Map<String, Object> resultMap = new HashMap<>();
                     resultMap.put("isSuccess", isSuccess);
                     resultMap.put("message", message);
                     result.success(resultMap);
