@@ -1,164 +1,145 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/services.dart';
-import 'package:flutter/material.dart';
 
-
-
-typedef Future<dynamic> EventHandler(Map<String, dynamic> event);
+typedef Future<dynamic> EventHandler(Map<String, dynamic>? event);
 
 class UpushPlugin {
-  static const MethodChannel _channel =
-  const MethodChannel('upush');
-  static UpushPlugin _instance;
+  static const MethodChannel _channel = const MethodChannel('upush');
+  static UpushPlugin? _instance;
 
-  factory UpushPlugin() => _getInstance();
+  factory UpushPlugin() => _getInstance()!;
 
   UpushPlugin._internal() {
     _channel.setMethodCallHandler(_handler);
   }
 
-  static UpushPlugin _getInstance() {
+  static UpushPlugin? _getInstance() {
     if (_instance == null) {
       _instance = UpushPlugin._internal();
     }
     return _instance;
   }
 
-
   //自定义推送消息
-  EventHandler onReceiveCustomMessage;
+  EventHandler? onReceiveCustomMessage;
 
   //推送消息
-  EventHandler onReceiveNotification ;
+  EventHandler? onReceiveNotification;
 
   //在线通知栏的点击
-  EventHandler onNotificatiClickHandler;
+  EventHandler? onNotificatiClickHandler;
 
   //接受离线通知的点击
-  EventHandler onReceiveOffLineNotification;
+  EventHandler? onReceiveOffLineNotification;
 
   void addEventHandle(
-      {EventHandler onNotificatiClickHandler,
-        EventHandler onReceiveCustomMessage,
-        EventHandler onReceiveNotification,
-        EventHandler onReceiveOffLineNotification}) {
+      {EventHandler? onNotificatiClickHandler,
+      EventHandler? onReceiveCustomMessage,
+      EventHandler? onReceiveNotification,
+      EventHandler? onReceiveOffLineNotification}) {
     this.onNotificatiClickHandler = onNotificatiClickHandler;
     this.onReceiveCustomMessage = onReceiveCustomMessage;
     this.onReceiveNotification = onReceiveNotification;
-    this.onReceiveOffLineNotification=onReceiveOffLineNotification;
+    this.onReceiveOffLineNotification = onReceiveOffLineNotification;
   }
-
 
   ///ios初始化
   // appKey：申请的值
   // channel：通道的名字
   //debug：默认false(不输出log); 设置为true, 输出可供调试参考的log信息. 发布产品时必须设置为false.
   //badgeClear：否开启角标清空
-  void setupIOS(String appKey,{String channel="flutter",bool debug=false,bool badgeClear=true}) async {
-
+  void setupIOS(String appKey,
+      {String channel = "flutter", bool debug = false, bool badgeClear = true}) async {
     if (!Platform.isIOS) {
       return;
     }
-    final Map<dynamic,dynamic> map ={"appkey": appKey, "channel": channel, "debug": debug,"badgeClear":badgeClear};
+    final Map<dynamic, dynamic> map = {
+      "appkey": appKey,
+      "channel": channel,
+      "debug": debug,
+      "badgeClear": badgeClear
+    };
 
-    _channel.invokeMethod("setupIOS", map) ;
-
+    _channel.invokeMethod("setupIOS", map);
   }
 
   /// 否开启弹出框
   void autoAlertIOS(bool autoAlert) async {
-
     if (!Platform.isIOS) {
       return;
     }
-    final Map<dynamic,dynamic> map ={"autoAlert": autoAlert};
+    final Map<dynamic, dynamic> map = {"autoAlert": autoAlert};
 
-    _channel.invokeMethod("autoAlertIOS", map) ;
-
+    _channel.invokeMethod("autoAlertIOS", map);
   }
 
   //是否开启角标清空
   void badgeClearIOS(bool badgeClear) async {
-
     if (!Platform.isIOS) {
       return;
     }
-    final Map<dynamic,dynamic> map ={"badgeClear": badgeClear};
+    final Map<dynamic, dynamic> map = {"badgeClear": badgeClear};
 
-    _channel.invokeMethod("badgeClearIOS", map) ;
-
+    _channel.invokeMethod("badgeClearIOS", map);
   }
 
-  Future<Map<dynamic,dynamic>> addTags(List<String> list) async {
-    final Map<dynamic,dynamic> result = await (_channel.invokeMethod("addTags", list)) ;
+  Future<Map<dynamic, dynamic>?> addTags(List<String> list) async {
+    final Map<dynamic, dynamic>? result = await (_channel.invokeMethod("addTags", list));
     return result;
   }
 
-
-  Future<Map<dynamic,dynamic>> deleteTags(List<String> list) async {
-    final Map<dynamic,dynamic> result =
-    await _channel.invokeMethod("deleteTags", list);
+  Future<Map<dynamic, dynamic>?> deleteTags(List<String> list) async {
+    final Map<dynamic, dynamic>? result = await _channel.invokeMethod("deleteTags", list);
     return result;
   }
 
-
-
-  Future<List<dynamic>> getTags() async {
-    final List<dynamic> result =
-    await _channel.invokeMethod("getTags");
+  Future<List<dynamic>?> getTags() async {
+    final List<dynamic>? result = await _channel.invokeMethod("getTags");
     return result;
   }
 
-
-
-  Future<Map<dynamic,dynamic>> addAlias(String aliasId,String aliasType) async {
-    final Map<dynamic,dynamic> result =
-    await _channel.invokeMethod("addAlias",{"aliasId":aliasId,"aliasType":aliasType});
+  Future<Map<dynamic, dynamic>?> addAlias(String aliasId, String aliasType) async {
+    final Map<dynamic, dynamic>? result =
+        await _channel.invokeMethod("addAlias", {"aliasId": aliasId, "aliasType": aliasType});
     return result;
   }
 
-
-  Future<Map<dynamic,dynamic>> setAlias(String aliasId,String aliasType) async {
-    final Map<dynamic,dynamic> result =
-    await _channel.invokeMethod("setAlias",{"aliasId":aliasId,"aliasType":aliasType});
+  Future<Map<dynamic, dynamic>?> setAlias(String aliasId, String aliasType) async {
+    final Map<dynamic, dynamic>? result =
+        await _channel.invokeMethod("setAlias", {"aliasId": aliasId, "aliasType": aliasType});
     return result;
   }
 
-  Future<Map<dynamic,dynamic>> deleteAlias(String aliasId,String aliasType) async {
-    final Map<dynamic,dynamic> result =
-    await _channel.invokeMethod("deleteAlias",{"aliasId":aliasId,"aliasType":aliasType});
+  Future<Map<dynamic, dynamic>?> deleteAlias(String aliasId, String aliasType) async {
+    final Map<dynamic, dynamic>? result =
+        await _channel.invokeMethod("deleteAlias", {"aliasId": aliasId, "aliasType": aliasType});
     return result;
   }
 
-
-  Future<String> getRegistrationId() async {
-    final String result =
-    await _channel.invokeMethod("getRegistrationId");
+  Future<String?> getRegistrationId() async {
+    final String? result = await _channel.invokeMethod("getRegistrationId");
     return result;
   }
-
-
-
 
   Future<Null> _handler(MethodCall call) {
     String method = call.method;
-    Map map = call.arguments;
+    Map? map = call.arguments;
 
     if (method == "onNotificatiClickHandler") {
       //注册回调
-      return onNotificatiClickHandler(call.arguments.cast<String, dynamic>());
+      return onNotificatiClickHandler!(call.arguments.cast<String, dynamic>()).then((value) => value as Null);
     } else if (method == "onReceiveCustomMessage") {
       //用户自定义消息
-      return onReceiveCustomMessage(call.arguments.cast<String, dynamic>());
+      return onReceiveCustomMessage!(call.arguments.cast<String, dynamic>()).then((value) => value as Null);
     } else if (method == "onReceiveNotification") {
       //正常推送消息
-      return onReceiveNotification(call.arguments.cast<String, dynamic>());
-    }else if(method=="onReceiveOffLineNotification"){
+      return onReceiveNotification!(call.arguments.cast<String, dynamic>()).then((value) => value as Null);
+    } else if (method == "onReceiveOffLineNotification") {
       //离线通知的点击
-      return  onReceiveOffLineNotification(call.arguments.cast<String, dynamic>());
-    }
-    else {
+      return onReceiveOffLineNotification!(call.arguments.cast<String, dynamic>())
+          .then((value) => value as Null);
+    } else {
       throw new UnsupportedError("Unrecognized Event");
     }
   }
