@@ -122,23 +122,21 @@ class UpushPlugin {
     return result;
   }
 
-  Future<Null> _handler(MethodCall call) {
+  Future<dynamic> _handler(MethodCall call) async {
     String method = call.method;
-    Map? map = call.arguments;
 
     if (method == "onNotificatiClickHandler") {
       //注册回调
-      return onNotificatiClickHandler!(call.arguments.cast<String, dynamic>()).then((value) => value as Null);
+      return onNotificatiClickHandler?.call(call.arguments.cast<String, dynamic>());
     } else if (method == "onReceiveCustomMessage") {
       //用户自定义消息
-      return onReceiveCustomMessage!(call.arguments.cast<String, dynamic>()).then((value) => value as Null);
+      return onReceiveCustomMessage?.call(call.arguments.cast<String, dynamic>());
     } else if (method == "onReceiveNotification") {
       //正常推送消息
-      return onReceiveNotification!(call.arguments.cast<String, dynamic>()).then((value) => value as Null);
+      return onReceiveNotification?.call(call.arguments.cast<String, dynamic>());
     } else if (method == "onReceiveOffLineNotification") {
       //离线通知的点击
-      return onReceiveOffLineNotification!(call.arguments.cast<String, dynamic>())
-          .then((value) => value as Null);
+      return onReceiveOffLineNotification?.call(call.arguments.cast<String, dynamic>());
     } else {
       throw new UnsupportedError("Unrecognized Event");
     }
