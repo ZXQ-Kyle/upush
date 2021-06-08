@@ -28,17 +28,17 @@ class UpushPlugin {
   EventHandler? onReceiveNotification;
 
   //在线通知栏的点击
-  EventHandler? onNotificatiClickHandler;
+  EventHandler? onNotificationClickHandler;
 
   //接受离线通知的点击
   EventHandler? onReceiveOffLineNotification;
 
   void addEventHandle(
-      {EventHandler? onNotificatiClickHandler,
+      {EventHandler? onNotificationClickHandler,
       EventHandler? onReceiveCustomMessage,
       EventHandler? onReceiveNotification,
       EventHandler? onReceiveOffLineNotification}) {
-    this.onNotificatiClickHandler = onNotificatiClickHandler;
+    this.onNotificationClickHandler = onNotificationClickHandler;
     this.onReceiveCustomMessage = onReceiveCustomMessage;
     this.onReceiveNotification = onReceiveNotification;
     this.onReceiveOffLineNotification = onReceiveOffLineNotification;
@@ -122,23 +122,22 @@ class UpushPlugin {
     return result;
   }
 
-  Future<Null> _handler(MethodCall call) {
+  Future<dynamic> _handler(MethodCall call) async {
     String method = call.method;
-    Map? map = call.arguments;
+    var map = call.arguments;
 
     if (method == "onNotificatiClickHandler") {
       //注册回调
-      return onNotificatiClickHandler!(call.arguments.cast<String, dynamic>()).then((value) => value as Null);
+      onNotificationClickHandler?.call(map.cast<String, dynamic>()).then((value) => value);
     } else if (method == "onReceiveCustomMessage") {
       //用户自定义消息
-      return onReceiveCustomMessage!(call.arguments.cast<String, dynamic>()).then((value) => value as Null);
+      onReceiveCustomMessage?.call(map.cast<String, dynamic>()).then((value) => value);
     } else if (method == "onReceiveNotification") {
       //正常推送消息
-      return onReceiveNotification!(call.arguments.cast<String, dynamic>()).then((value) => value as Null);
+      onReceiveNotification?.call(map.cast<String, dynamic>()).then((value) => value);
     } else if (method == "onReceiveOffLineNotification") {
       //离线通知的点击
-      return onReceiveOffLineNotification!(call.arguments.cast<String, dynamic>())
-          .then((value) => value as Null);
+      onReceiveOffLineNotification?.call(map.cast<String, dynamic>()).then((value) => value);
     } else {
       throw new UnsupportedError("Unrecognized Event");
     }
